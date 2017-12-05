@@ -163,6 +163,23 @@ export const UserIsAuthenticated = UserAuthWrapper({
     })
   },
 })
+
+export const UserIsNotAuthenticated = UserAuthWrapper({ // eslint-disable-line new-cap
+  wrapperDisplayName: 'UserIsNotAuthenticated',
+  allowRedirectBack: false,
+  failureRedirectPath: (state, props) =>
+    // redirect to page user was on
+    props.location.query.redirect,
+  authSelector: ({ firebase }) => pathToJS(firebase, 'auth'),
+  authenticatingSelector: ({ firebase }) =>
+    (pathToJS(firebase, 'auth') === undefined) ||
+    (pathToJS(firebase, 'isInitializing') === true),
+  predicate: auth => auth === null,
+  redirectAction: newLoc => (dispatch) => {
+    browserHistory.replace(newLoc)
+    dispatch({ type: 'AUTHED_REDIRECT' })
+  }
+})
 ```
 
 **`v2.*.*`**
@@ -186,6 +203,25 @@ export const UserIsAuthenticated = UserAuthWrapper({
     })
   },
 })
+
+export const UserIsNotAuthenticated = UserAuthWrapper({
+  // eslint-disable-line new-cap
+  wrapperDisplayName: 'UserIsNotAuthenticated',
+  allowRedirectBack: false,
+  failureRedirectPath: (state, props) =>
+    // redirect to page user was on
+    props.location.query.redirect,
+  authSelector: ({ firebase: { auth } }) => auth,
+  authenticatingSelector: ({ firebase: { auth, isInitializing } }) =>
+    !auth.isLoaded || isInitializing,
+  predicate: auth => auth === null,
+  predicate: auth => auth.isEmpty,
+  redirectAction: newLoc => dispatch => {
+    browserHistory.replace(newLoc)
+    dispatch({ type: 'AUTHED_REDIRECT' })
+  }
+})
+
 ```
 
 See [the routing recipes](/docs/recipes/routing) for more details and examples with `redux-auth-wrapper@v2.*.*`.
